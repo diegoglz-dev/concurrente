@@ -11,7 +11,7 @@
 <tr>
 <td>
 
-```c
+```c++
 chan fila(int, text);
 chan resolucion[N](resultado);
 
@@ -30,13 +30,14 @@ Process Persona[id: 0 .. N-1] {
 
 <td>
 
-```c
+```c++
 Process Empleado[id: 0 .. 1] {
 	text res, tram, int idp;
+
 	while (true) {
 		receive fila(idp, tram);
 		res = atender(tram);
-		send recolucion[idp](res);
+		send resolucion[idp](res);
 	}
 }
 ```

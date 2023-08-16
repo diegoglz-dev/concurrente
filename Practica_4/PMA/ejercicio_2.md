@@ -9,18 +9,21 @@
 <tr>
 <td>
 
-```c
-chan cola(int);
+```c++
+chan fila(int);
 chan cajaAsignada[N](int);
-chan respuestas[N](text);
+chan respuestas[N];
+chan pedido(); // Utilizado para sincronizar y así evitar Busy Waiting
 
-Process Persona[id: 0 .. N-1] {
-	text res, tramite;
+Process Persona[id: 1 .. N] {
+    text tramite, res; int idcaja;
 
-	tramite = generarTramite();
-	send cola(id, tramite);
-	send pedido("In");
-	receive respuesta[id](res);
+    tramite = generarTramite();
+    send pedido();
+    send fila(id);
+    receive cajaAsignada[id](idcaja);
+    send irCaja[idcaja](id, tramite);
+    receive respuestas[id](res);
 }
 ```
 
@@ -30,19 +33,21 @@ Process Persona[id: 0 .. N-1] {
 
 ```c++
 Process Coordinador {
-	array caja[5]([5] 0);
-	int idp; text tramite, tipo;
+    int idp; array cajas[5]([5] 0);
+    int idcaja;
+
     while (true) {
-        pedido(tipo)
-        if (tipo == "In") {
-            receive cola(idp, tramite);
-            min = menosPersonas(caja);
-            send cajaAsignada[min](id, tramite);
-            menosPersonas[min]++;
-        } else if (tipo == "Out") {
-            receive atendido(idcaja);
-            menosPersonas[idcaja]--;
-        }
+    receive pedido();
+
+    if (! empty(fila) && empty(atendido)){
+        receive fila(idp);
+        min = menosPersona(cajas);
+        send cajaAsignada[idp](min);
+        cajas[min]++;
+    }
+    if (!empty(atendido)){
+        receive atendido(idcaja);
+        caja[idcaja]--;
     }
 }
 ```
@@ -52,14 +57,14 @@ Process Coordinador {
 <td>
 
 ```c++
-Process Empleado[id: 0 .. 4] {
-    int idp, text tramite, text res;
-    receive cajaAsignada[id](idp, tramite);
-    res = resolver(tramite);
-    send respuesta[id](res);
+Process Empleado {
+    int idp; text res, tramite;
 
+    receive irCaja[id](idp, tramite);
+    res = resolver(tramite);
+    send respuestas[idp](res);
     send atendido(id);
-    send pedido("Out");
+    send pedido();
 }
 ```
 
